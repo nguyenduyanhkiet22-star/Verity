@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Code Evaluator</title>
+
+    <style>
+        :root {
+            --primary-color: #9471e9;
+            --primary-dark: #7c5cdb;
+            --success-color: #22c55e;
+            --error-color: #ef4444;
+            --error-light: #fca5a5;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #e2e8f0;
+            --text-secondary: #cbd5e1;
+            --border-color: rgba(148, 113, 233, 0.25);
+            --border-primary: rgba(148, 113, 233, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-card) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        main {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        header,
+        section {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        header {
+            border-left: 4px solid var(--primary-color);
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .language-tag {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin: 0 0 10px 0;
+        }
+
+        pre {
+            white-space: pre;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            font-size: 12px;
+            line-height: 1.5;
+            font-family: Monaco, Consolas, monospace;
+            margin: 0;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .code-preview {
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(15, 23, 42, 0.95);
+            padding: 0;
+            border-radius: 6px;
+        }
+
+        .code-preview pre {
+            padding: 12px;
+        }
+
+        /* Custom scrollbar for better UX */
+        .code-preview::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .code-preview::-webkit-scrollbar-track {
+            background: rgba(148, 113, 233, 0.1);
+        }
+
+        .code-preview::-webkit-scrollbar-thumb {
+            background: rgba(148, 113, 233, 0.3);
+            border-radius: 3px;
+        }
+
+        .code-preview::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 113, 233, 0.5);
+        }
+
+        .waiting {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .spinner {
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(148, 113, 233, 0.3);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            flex: 0 0 auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .result {
+            background: rgba(15, 23, 42, 0.8);
+            border-left: 4px solid var(--success-color);
+        }
+
+        .error {
+            border-left: 4px solid var(--error-color);
+            color: var(--error-light);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 11px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #8b63e0 0%, #7053d1 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(148, 113, 233, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: rgba(148, 113, 233, 0.3);
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: rgba(148, 113, 233, 0.1);
+            color: #c4b5fd;
+            border: 1px solid var(--border-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(148, 113, 233, 0.2);
+            border-color: rgba(148, 113, 233, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            color: rgba(196, 181, 253, 0.5);
+            transform: none;
+        }
+
+        .small {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+
+        /* Screen reader only text for accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+
+        <header>
+            <h1>🔍 Code Evaluator</h1>
+
+            <p class="subtitle">
+                Prompt-based evaluation using the current chat
+            </p>
+
+            <div class="language-tag" id="languageTag" role="status">
+                Loading...
+            </div>
+        </header>
+
+        <section class="code-preview" aria-labelledby="codePreviewTitle">
+            <h2 id="codePreviewTitle" class="card-title">
+                Code Preview
+            </h2>
+
+            <pre id="codePreview">Loading code...</pre>
+        </section>
+
+        <section id="waitingCard">
+            <div class="waiting">
+                <div class="spinner" role="status" aria-live="polite">
+                    <span class="sr-only">Loading...</span>
+                </div>
+
+                <div>
+                    <strong>Waiting for AI response...</strong>
+
+                    <p class="small">
+                        The prompt was sent into the chat.
+                        This panel will update when the answer appears.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="result hidden" id="resultCard" aria-labelledby="resultTitle">
+            <h2 id="resultTitle" class="card-title">
+                Evaluation Result
+            </h2>
+
+            <pre id="resultText"></pre>
+        </section>
+
+        <section class="error hidden" id="errorCard" aria-labelledby="errorTitle">
+            <h2 id="errorTitle" class="card-title">
+                Error
+            </h2>
+
+            <pre id="errorText"></pre>
+        </section>
+
+        <div class="actions">
+            <button
+                class="btn-primary"
+                id="refreshBtn"
+                aria-label="Refresh evaluation result">
+                Refresh
+            </button>
+
+            <button
+                class="btn-secondary"
+                id="closeBtn"
+                aria-label="Close evaluator panel">
+                Close
+            </button>
+        </div>
+
+    </main>
+
+    <script src="evaluator.js"></script>
+</body>
+</html>
